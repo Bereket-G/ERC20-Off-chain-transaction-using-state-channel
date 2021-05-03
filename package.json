@@ -23,6 +23,7 @@
     "start": "nodemon offchain/loader.cjs"
   },
   "dependencies": {
+    "@nomiclabs/buidler": "^1.4.8",
     "@truffle/hdwallet-provider": "^1.0.35",
     "auto-bind": "^4.0.0",
     "body-parser": "^1.19.0",

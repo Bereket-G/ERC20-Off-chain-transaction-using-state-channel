@@ -24,7 +24,6 @@ module.exports = class Service {
     // Test CLI
     async getBalance(params) {
         return await this.contract.methods.balanceOf(params.address).call();
-        // return await this.web3.eth.getBalance(params.address);
     }
 
     // Test CLI
@@ -88,24 +87,30 @@ module.exports = class Service {
         this.saveReceipt(receiptStateM);
 
         // checking if both parties have signed the latest receipt
-        const readyToCommit = await Service.checkReceiptForCommit(receiptStateM);
+        const readyToCommit = await this.checkReceiptForCommit(receiptStateM);
         if (readyToCommit) {
             receiptStateM[RECEIPT_EVENTS.COMMIT_RECEIPT]();
             this.saveReceipt(receiptStateM);
-            this.commitReceiptTransaction(receiptStateM);
+            await this.commitReceiptTransaction(receiptStateM);
         }
 
         return receiptStateM;
     }
 
     async commitReceiptTransaction(receipt) {
-        let result = await this.contract.methods.commitReceiptTransaction(receipt.from_address, receipt.to_address, receipt.amount,
-            receipt.receiptId, receipt.sender_signature, receipt.receipt_signature).send({from: receipt.from_address});
-        if (result.transactionHash) {
-            receipt[RECEIPT_EVENTS.RECEIPT_COMMITTED]();
-        } else {
+        try {
+
+            let result = await this.contract.methods.commitReceiptTransaction(receipt.from_address, receipt.to_address, receipt.amount, receipt.receiptId, receipt.sender_signature, receipt.receipt_signature).send({from: receipt.from_address});
+            if (result.transactionHash) {
+                receipt[RECEIPT_EVENTS.RECEIPT_COMMITTED]();
+            } else {
+                receipt[RECEIPT_EVENTS.RECEIPT_COMMIT_FAILED]();
+            }
+        } catch (e) {
+            console.log("Error : ", e.message);
             receipt[RECEIPT_EVENTS.RECEIPT_COMMIT_FAILED]();
         }
+
     }
 
 

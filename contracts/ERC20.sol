@@ -86,31 +86,29 @@ contract ERC20 is IERC20, Ownable, Pausable {
     }
 
     /// settle receipt to chain
-    function commitReceiptTransaction(address _from, address _to,
-        uint256 amount, uint256 nonce, bytes memory _sender_signature,
-        bytes memory _recipient_signature) public {
+    function commitReceiptTransaction(address _from, address _to, uint256 amount, uint256 nonce, bytes memory _sender_signature, bytes memory _recipient_signature) public override payable {
 
-//        require(msg.sender == recipient);
         require(isValidSignature(_from, _to, amount, nonce, _sender_signature, _from));
+        require(isValidSignature(_from, _to, amount, nonce, _recipient_signature, _to));
 
         transfer(_to, amount);
 
     }
 
-    function isValidSignature(address _from, address _to, uint256 amount, uint256 nonce, bytes memory signature, address _signer)
-    internal
-    view
-    returns (bool)
+
+    function isValidSignature(address _from, address _to, uint256 amount, uint256 nonce, bytes memory signature, address _signer) internal view returns (bool)
     {
         bytes32 message = prefixed(keccak256(abi.encodePacked(_from, _to, amount, nonce)));
 
+        //  return true;
+
         // check that the signature is from the payment sender
-        return recoverSigner(message, signature) == _signer;
+         return recoverSigner(message, signature) == _signer;
     }
 
     function recoverSigner(bytes32 message, bytes memory sig)
     internal
-    pure
+    view
     returns (address)
     {
         (uint8 v, bytes32 r, bytes32 s) = splitSignature(sig);
